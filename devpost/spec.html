@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Technical Spec Review — MindSync AI Second Brain</title>
+  <style>
+    :root {
+      --bg-primary: #090d16;
+      --bg-secondary: #0f172a;
+      --bg-card: rgba(19, 27, 46, 0.7);
+      --accent-blue: #3b82f6;
+      --accent-cyan: #06b6d4;
+      --accent-purple: #8b5cf6;
+      --accent-emerald: #10b981;
+      --text-primary: #f8fafc;
+      --text-secondary: #94a3b8;
+      --border-color: rgba(255, 255, 255, 0.08);
+      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      font-family: var(--font-sans);
+      line-height: 1.6;
+      padding: 2rem 1rem 6rem;
+    }
+
+    .container { max-width: 960px; margin: 0 auto; }
+
+    header {
+      text-align: center;
+      margin-bottom: 2.5rem;
+      padding-bottom: 1.5rem;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      border-radius: 9999px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      background: rgba(59, 130, 246, 0.15);
+      color: var(--accent-cyan);
+      border: 1px solid rgba(6, 182, 212, 0.25);
+      margin-bottom: 0.75rem;
+    }
+
+    h1 {
+      font-size: 2.25rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #60a5fa, #38bdf8, #c084fc);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 0.5rem;
+    }
+
+    .subtitle { color: var(--text-secondary); font-size: 1.1rem; }
+
+    .card {
+      background: var(--bg-card);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border-color);
+      border-radius: 1rem;
+      padding: 1.5rem;
+      margin-bottom: 1.75rem;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+
+    .card-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #38bdf8;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    /* Architecture diagram */
+    .arch-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin: 1.25rem 0;
+    }
+
+    .arch-box {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 0.75rem;
+      padding: 1rem;
+      text-align: center;
+    }
+
+    .arch-box h4 {
+      color: var(--accent-cyan);
+      font-size: 0.95rem;
+      margin-bottom: 0.35rem;
+    }
+
+    .arch-box p {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+    }
+
+    pre {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 0.5rem;
+      padding: 1rem;
+      overflow-x: auto;
+      font-family: "Fira Code", monospace;
+      font-size: 0.85rem;
+      color: #e2e8f0;
+      margin: 1rem 0;
+    }
+
+    /* Comment Box */
+    .comment-box {
+      margin-top: 1rem;
+      background: rgba(15, 23, 42, 0.7);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 0.5rem;
+      padding: 0.75rem;
+    }
+
+    .comment-box textarea {
+      width: 100%;
+      min-height: 45px;
+      background: transparent;
+      border: none;
+      color: var(--text-primary);
+      font-family: inherit;
+      font-size: 0.9rem;
+      resize: vertical;
+      outline: none;
+    }
+
+    .comment-header {
+      font-size: 0.75rem;
+      color: var(--accent-cyan);
+      margin-bottom: 0.35rem;
+      font-weight: 600;
+    }
+
+    .feedback-bar {
+      position: fixed;
+      bottom: 1.5rem;
+      left: 50%;
+      transform: translateX(-50%);
+      width: calc(100% - 2rem);
+      max-width: 960px;
+      background: rgba(15, 23, 42, 0.95);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--accent-blue);
+      border-radius: 0.75rem;
+      padding: 1rem 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 15px 30px rgba(0,0,0,0.6);
+      z-index: 100;
+    }
+
+    .btn {
+      padding: 0.6rem 1.25rem;
+      border-radius: 0.5rem;
+      font-weight: 600;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: none;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #3b82f6, #6366f1);
+      color: white;
+    }
+
+    .toast {
+      position: fixed;
+      top: 1rem;
+      right: 1rem;
+      background: #10b981;
+      color: white;
+      padding: 0.75rem 1.5rem;
+      border-radius: 0.5rem;
+      font-weight: 600;
+      display: none;
+      box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+      z-index: 200;
+    }
+  </style>
+</head>
+<body>
+
+<div class="toast" id="toast">Feedback copied to clipboard!</div>
+
+<div class="container">
+  <header>
+    <div class="badge">Technical Specification Review</div>
+    <h1>MindSync Technical Spec</h1>
+    <p class="subtitle">Architecture, Data Flow, Components & File Layout</p>
+  </header>
+
+  <!-- Architecture Flow -->
+  <div class="card" data-section="System Architecture">
+    <div class="card-header">
+      <h2 class="card-title">🏗️ System Architecture & Stack</h2>
+    </div>
+    <div class="arch-grid">
+      <div class="arch-box">
+        <h4>Frontend UI</h4>
+        <p>React 18 + Vite with fast reactive state & Obsidian dark theme</p>
+      </div>
+      <div class="arch-box">
+        <h4>LLM Client Layer</h4>
+        <p>Unified streaming adapter for OpenAI, Gemini, Anthropic, & Ollama</p>
+      </div>
+      <div class="arch-box">
+        <h4>Memory Indexer</h4>
+        <p>In-browser TF-IDF + vector cosine similarity memory search</p>
+      </div>
+      <div class="arch-box">
+        <h4>Storage & Sync</h4>
+        <p>JSON persistence with cloud sync readiness</p>
+      </div>
+    </div>
+
+    <div class="comment-box">
+      <div class="comment-header">💬 Comments on Stack & Architecture:</div>
+      <textarea placeholder="Comments on stack choices or data flow?"></textarea>
+    </div>
+  </div>
+
+  <!-- Component Map -->
+  <div class="card" data-section="Components & PRD Mapping">
+    <div class="card-header">
+      <h2 class="card-title">🧩 Component Hierarchy</h2>
+    </div>
+    <ul style="margin-left: 1.5rem; color: var(--text-secondary); font-size: 0.95rem;">
+      <li><code>ChatView.jsx</code>: Real-time streaming conversation, model dropdown, memory citation tags with jump-to-chat.</li>
+      <li><code>HistoryView.jsx</code>: Full-screen sortable (date, message count) & filterable (model, topic, query) conversation manager.</li>
+      <li><code>TopicsView.jsx</code>: Interactive dynamic Word Cloud + aggregated multi-chat AI synthesis.</li>
+      <li><code>SettingsView.jsx</code>: API key vault & local Ollama endpoint configuration.</li>
+      <li><code>services/indexer.js</code>: In-memory chunking, topic extraction, and semantic search.</li>
+    </ul>
+
+    <div class="comment-box">
+      <div class="comment-header">💬 Comments on Components:</div>
+      <textarea placeholder="Any comments on component boundaries?"></textarea>
+    </div>
+  </div>
+
+  <!-- File Structure -->
+  <div class="card" data-section="File Layout">
+    <div class="card-header">
+      <h2 class="card-title">📁 Planned File Tree</h2>
+    </div>
+    <pre>
+AI_Interface/
+├── index.html
+├── package.json
+├── vite.config.js
+├── src/
+│   ├── main.jsx
+│   ├── App.jsx
+│   ├── index.css
+│   ├── components/
+│   │   ├── Navbar.jsx
+│   │   ├── ChatView.jsx
+│   │   ├── HistoryView.jsx
+│   │   ├── TopicsView.jsx
+│   │   ├── SettingsView.jsx
+│   │   └── CitationBadge.jsx
+│   ├── services/
+│   │   ├── llm.js
+│   │   ├── indexer.js
+│   │   └── storage.js
+│   └── utils/
+│       └── wordcloud.js
+└── devpost/
+    </pre>
+
+    <div class="comment-box">
+      <div class="comment-header">💬 Comments on File Layout:</div>
+      <textarea placeholder="Any comments on planned files?"></textarea>
+    </div>
+  </div>
+
+  <!-- Review Bar -->
+  <div class="feedback-bar">
+    <div>
+      <strong>Reviewing Technical Spec</strong>
+      <p style="font-size: 0.8rem; color: var(--text-secondary);">Add your comments above or copy feedback to share in chat.</p>
+    </div>
+    <button class="btn btn-primary" onclick="copyAllFeedback()">📋 Copy All Comments</button>
+  </div>
+</div>
+
+<script>
+  function copyAllFeedback() {
+    const cards = document.querySelectorAll('.card');
+    let report = [];
+    cards.forEach(card => {
+      const sectionName = card.getAttribute('data-section');
+      const textarea = card.querySelector('textarea');
+      if (textarea && textarea.value.trim()) {
+        report.push(`- **${sectionName}:** ${textarea.value.trim()}`);
+      }
+    });
+
+    const summaryText = report.length > 0 
+      ? `Spec Review Comments:\n${report.join('\n')}` 
+      : `Spec Review: Looks good and approved! Ready to proceed to 5-build.`;
+
+    navigator.clipboard.writeText(summaryText).then(() => {
+      const toast = document.getElementById('toast');
+      toast.style.display = 'block';
+      setTimeout(() => { toast.style.display = 'none'; }, 2500);
+    });
+  }
+</script>
+
+</body>
+</html>

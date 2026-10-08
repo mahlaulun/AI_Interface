@@ -1,0 +1,12 @@
+# Learner profile (keeps personal learning context out of commits)
+/devpost/learner-profile.md
+
+# Environment & Secrets
+.env
+.env.*
+!.env.example
+
+# Dependencies & Build
+node_modules/
+dist/
+build/

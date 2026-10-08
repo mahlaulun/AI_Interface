@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PRD Review — MindSync AI Second Brain</title>
+  <style>
+    :root {
+      --bg-primary: #090d16;
+      --bg-secondary: #0f172a;
+      --bg-card: rgba(19, 27, 46, 0.7);
+      --accent-blue: #3b82f6;
+      --accent-cyan: #06b6d4;
+      --accent-purple: #8b5cf6;
+      --accent-emerald: #10b981;
+      --text-primary: #f8fafc;
+      --text-secondary: #94a3b8;
+      --border-color: rgba(255, 255, 255, 0.08);
+      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      font-family: var(--font-sans);
+      line-height: 1.6;
+      padding: 2rem 1rem 6rem;
+    }
+
+    .container { max-width: 960px; margin: 0 auto; }
+
+    header {
+      text-align: center;
+      margin-bottom: 2.5rem;
+      padding-bottom: 1.5rem;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      border-radius: 9999px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      background: rgba(59, 130, 246, 0.15);
+      color: var(--accent-cyan);
+      border: 1px solid rgba(6, 182, 212, 0.25);
+      margin-bottom: 0.75rem;
+    }
+
+    h1 {
+      font-size: 2.25rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #60a5fa, #38bdf8, #c084fc);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 0.5rem;
+    }
+
+    .subtitle { color: var(--text-secondary); font-size: 1.1rem; }
+
+    .card {
+      background: var(--bg-card);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border-color);
+      border-radius: 1rem;
+      padding: 1.5rem;
+      margin-bottom: 1.75rem;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+
+    .card-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #38bdf8;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .nav-preview {
+      display: flex;
+      background: var(--bg-secondary);
+      border-radius: 0.5rem;
+      border: 1px solid var(--border-color);
+      overflow: hidden;
+      margin: 1rem 0;
+    }
+
+    .nav-item {
+      flex: 1;
+      text-align: center;
+      padding: 0.75rem 0.5rem;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      border-right: 1px solid var(--border-color);
+    }
+    .nav-item:last-child { border-right: none; }
+    .nav-item.active {
+      color: #fff;
+      background: rgba(59, 130, 246, 0.2);
+      border-bottom: 2px solid var(--accent-blue);
+    }
+
+    .criteria-list {
+      list-style: none;
+      margin: 0.75rem 0;
+    }
+
+    .criteria-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.6rem;
+      padding: 0.4rem 0;
+      font-size: 0.92rem;
+      color: #cbd5e1;
+    }
+
+    .check-icon {
+      color: var(--accent-emerald);
+      font-weight: bold;
+    }
+
+    /* Comment Box */
+    .comment-box {
+      margin-top: 1rem;
+      background: rgba(15, 23, 42, 0.7);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 0.5rem;
+      padding: 0.75rem;
+    }
+
+    .comment-box textarea {
+      width: 100%;
+      min-height: 45px;
+      background: transparent;
+      border: none;
+      color: var(--text-primary);
+      font-family: inherit;
+      font-size: 0.9rem;
+      resize: vertical;
+      outline: none;
+    }
+
+    .comment-header {
+      font-size: 0.75rem;
+      color: var(--accent-cyan);
+      margin-bottom: 0.35rem;
+      font-weight: 600;
+    }
+
+    .feedback-bar {
+      position: fixed;
+      bottom: 1.5rem;
+      left: 50%;
+      transform: translateX(-50%);
+      width: calc(100% - 2rem);
+      max-width: 960px;
+      background: rgba(15, 23, 42, 0.95);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--accent-blue);
+      border-radius: 0.75rem;
+      padding: 1rem 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 15px 30px rgba(0,0,0,0.6);
+      z-index: 100;
+    }
+
+    .btn {
+      padding: 0.6rem 1.25rem;
+      border-radius: 0.5rem;
+      font-weight: 600;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: none;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #3b82f6, #6366f1);
+      color: white;
+    }
+
+    .toast {
+      position: fixed;
+      top: 1rem;
+      right: 1rem;
+      background: #10b981;
+      color: white;
+      padding: 0.75rem 1.5rem;
+      border-radius: 0.5rem;
+      font-weight: 600;
+      display: none;
+      box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+      z-index: 200;
+    }
+  </style>
+</head>
+<body>
+
+<div class="toast" id="toast">Feedback copied to clipboard!</div>
+
+<div class="container">
+  <header>
+    <div class="badge">PRD Product Requirements Review</div>
+    <h1>MindSync PRD</h1>
+    <p class="subtitle">Detailed Journey, Surfaces, Behaviors & Acceptance Criteria</p>
+  </header>
+
+  <!-- Navigation Structure -->
+  <div class="card" data-section="Navigation & Views Layout">
+    <div class="card-header">
+      <h2 class="card-title">📱 Surfaces & Navigation</h2>
+    </div>
+    <p>MindSync is structured into four dedicated, clean surfaces:</p>
+    
+    <div class="nav-preview">
+      <div class="nav-item active">💬 Chat Workspace</div>
+      <div class="nav-item">📚 History (Sort/Filter)</div>
+      <div class="nav-item">☁️ Topics & Word Cloud</div>
+      <div class="nav-item">⚙️ Settings (Keys/Ollama)</div>
+    </div>
+
+    <ul style="margin-left: 1.5rem; color: var(--text-secondary); font-size: 0.95rem;">
+      <li><strong>Chat:</strong> Focused, distraction-free conversation area with live model switching.</li>
+      <li><strong>History View:</strong> Standalone surface with sorting (Date, Title, Message Count) and filtering (by Topic, Model, search query).</li>
+      <li><strong>Topics & Insights:</strong> Word Cloud (starts blank, weights words by frequency) + instant multi-chat synthesis on click.</li>
+      <li><strong>Settings:</strong> BYO API keys (OpenAI, Gemini, Anthropic) & local Ollama endpoint configuration.</li>
+    </ul>
+
+    <div class="comment-box">
+      <div class="comment-header">💬 Comments on Surfaces & Layout:</div>
+      <textarea placeholder="Any comments on the view structure or navigation?"></textarea>
+    </div>
+  </div>
+
+  <!-- Memory Recall Experience -->
+  <div class="card" data-section="Conversational Memory Recall">
+    <div class="card-header">
+      <h2 class="card-title">🧠 Natural Memory Recall Experience</h2>
+    </div>
+    <p>When asking <em>"you mentioned X previously, can you remind me what you said?"</em>:</p>
+    <ul class="criteria-list">
+      <li class="criteria-item"><span class="check-icon">✓</span> The assistant incorporates past knowledge naturally into conversational dialogue.</li>
+      <li class="criteria-item"><span class="check-icon">✓</span> A discreet citation tag appears alongside the message (e.g. <code>[🧠 Ref: Sep 24 • Architecture Chat]</code>).</li>
+      <li class="criteria-item"><span class="check-icon">✓</span> Clicking the citation expands to inspect the exact historical snippet, with a <strong>"Jump to Conversation"</strong> button to open the full past chat.</li>
+    </ul>
+
+    <div class="comment-box">
+      <div class="comment-header">💬 Comments on Memory Recall:</div>
+      <textarea placeholder="Comments on how recalled context and snippet citations behave?"></textarea>
+    </div>
+  </div>
+
+  <!-- Word Cloud & Topic Summaries -->
+  <div class="card" data-section="Word Cloud & Topic Synthesis">
+    <div class="card-header">
+      <h2 class="card-title">☁️ Word Cloud & Multi-Chat Synthesis</h2>
+    </div>
+    <ul class="criteria-list">
+      <li class="criteria-item"><span class="check-icon">✓</span> Starts blank upon initial fresh launch, populating dynamically as conversations are recorded.</li>
+      <li class="criteria-item"><span class="check-icon">✓</span> Word sizes dynamically scale based on term frequency and relevance across chats.</li>
+      <li class="criteria-item"><span class="check-icon">✓</span> Clicking a word filters conversations discussing that topic and generates an aggregated AI synthesis summary.</li>
+    </ul>
+
+    <div class="comment-box">
+      <div class="comment-header">💬 Comments on Word Cloud:</div>
+      <textarea placeholder="Comments on topic extraction or multi-chat summary generation?"></textarea>
+    </div>
+  </div>
+
+  <!-- Acceptance Criteria & What We're Building -->
+  <div class="card" data-section="Acceptance Criteria & Scope">
+    <div class="card-header">
+      <h2 class="card-title">✅ POC Acceptance Criteria</h2>
+    </div>
+    <ul class="criteria-list">
+      <li class="criteria-item"><span class="check-icon">✓</span> Multi-LLM provider switching (OpenAI, Gemini, Anthropic, Ollama).</li>
+      <li class="criteria-item"><span class="check-icon">✓</span> Cloud-persisted conversation store for cross-device continuity.</li>
+      <li class="criteria-item"><span class="check-icon">✓</span> Separate, sortable & filterable history view.</li>
+      <li class="criteria-item"><span class="check-icon">✓</span> Interactive topic word cloud with click-to-summarize topics.</li>
+      <li class="criteria-item"><span class="check-icon">✓</span> Conversational memory recall with verifiable snippet citations.</li>
+    </ul>
+
+    <div class="comment-box">
+      <div class="comment-header">💬 Comments on Acceptance Criteria:</div>
+      <textarea placeholder="Any additional criteria or tweaks?"></textarea>
+    </div>
+  </div>
+
+  <!-- Review Bar -->
+  <div class="feedback-bar">
+    <div>
+      <strong>Reviewing PRD</strong>
+      <p style="font-size: 0.8rem; color: var(--text-secondary);">Add your comments above or copy feedback to share in chat.</p>
+    </div>
+    <button class="btn btn-primary" onclick="copyAllFeedback()">📋 Copy All Comments</button>
+  </div>
+</div>
+
+<script>
+  function copyAllFeedback() {
+    const cards = document.querySelectorAll('.card');
+    let report = [];
+    cards.forEach(card => {
+      const sectionName = card.getAttribute('data-section');
+      const textarea = card.querySelector('textarea');
+      if (textarea && textarea.value.trim()) {
+        report.push(`- **${sectionName}:** ${textarea.value.trim()}`);
+      }
+    });
+
+    const summaryText = report.length > 0 
+      ? `PRD Review Comments:\n${report.join('\n')}` 
+      : `PRD Review: Looks good and approved! Ready to proceed to 4-spec.`;
+
+    navigator.clipboard.writeText(summaryText).then(() => {
+      const toast = document.getElementById('toast');
+      toast.style.display = 'block';
+      setTimeout(() => { toast.style.display = 'none'; }, 2500);
+    });
+  }
+</script>
+
+</body>
+</html>
