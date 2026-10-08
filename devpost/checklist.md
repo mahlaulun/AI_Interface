@@ -30,7 +30,7 @@ Build mode: fast
   Learner check: Configure an API key or local Ollama endpoint in Settings, send a chat message, and verify the streaming response renders smoothly.
   Commit: `Add unified multi-LLM streaming client and chat interface`
 
-- [ ] **3. Persistent Conversation Store & Sortable/Filterable History**
+- [x] **3. Persistent Conversation Store & Sortable/Filterable History**
   Becomes usable: Chats automatically persist to structured JSON storage; navigating to History allows searching, sorting (date/count), and filtering (by model or topic) past chats.
   Why now: Persistence ensures conversations survive reloads and sets up the dataset needed for indexing and word clouds.
   PRD ref: `prd.md > Separate Sortable & Filterable History View`, `prd.md > States and Boundaries`

@@ -5,6 +5,7 @@ import HistoryView from './components/HistoryView.jsx';
 import TopicsView from './components/TopicsView.jsx';
 import SettingsView from './components/SettingsView.jsx';
 import { streamChatResponse } from './services/llm.js';
+import { getStoredConversations, saveConversation, deleteConversation } from './services/storage.js';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('chat');
@@ -23,16 +24,19 @@ export default function App() {
     defaultProvider: 'openai'
   });
 
-  // Load initial settings
+  // Load initial settings and conversations
   useEffect(() => {
     try {
-      const saved = localStorage.getItem('mindsync_settings');
-      if (saved) {
-        setSettings(JSON.parse(saved));
+      const savedSettings = localStorage.getItem('mindsync_settings');
+      if (savedSettings) {
+        setSettings(JSON.parse(savedSettings));
       }
     } catch (e) {
       console.warn('Failed to load settings', e);
     }
+
+    const storedConvs = getStoredConversations();
+    setConversations(storedConvs);
   }, []);
 
   const handleSaveSettings = (newSettings) => {
@@ -65,7 +69,14 @@ export default function App() {
       recalledSnippets: []
     };
 
-    setActiveMessages([...updatedMessages, initialAssistantMsg]);
+    const streamingMessagesList = [...updatedMessages, initialAssistantMsg];
+    setActiveMessages(streamingMessagesList);
+
+    // Create or determine conversation ID
+    const convId = activeConversationId || `conv_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+    if (!activeConversationId) {
+      setActiveConversationId(convId);
+    }
 
     try {
       let fullContent = '';
@@ -81,6 +92,26 @@ export default function App() {
           prev.map(m => m.id === assistantMsgId ? { ...m, content: fullContent } : m)
         );
       }
+
+      // Persist completed turn to storage
+      const finalAssistantMsg = { ...initialAssistantMsg, content: fullContent };
+      const finalMessageHistory = [...updatedMessages, finalAssistantMsg];
+
+      // Generate a title if new conversation
+      const conversationTitle = activeMessages.length === 0 
+        ? (text.length > 35 ? text.slice(0, 35) + '...' : text)
+        : (conversations.find(c => c.id === convId)?.title || text.slice(0, 35));
+
+      const conversationDoc = {
+        id: convId,
+        title: conversationTitle,
+        model: currentModel,
+        messages: finalMessageHistory,
+        topics: ['general']
+      };
+
+      const updatedConvs = saveConversation(conversationDoc);
+      setConversations(updatedConvs);
     } catch (err) {
       console.error('Streaming error:', err);
       setActiveMessages(prev => 
@@ -96,12 +127,21 @@ export default function App() {
     setActiveConversationId(null);
   };
 
-  const handleJumpToConversation = (convId) => {
+  const handleSelectConversation = (convId) => {
     const conv = conversations.find(c => c.id === convId);
     if (conv) {
       setActiveConversationId(conv.id);
       setActiveMessages(conv.messages || []);
+      setCurrentModel(conv.model || 'gpt-4o');
       setActiveTab('chat');
+    }
+  };
+
+  const handleDeleteConversation = (convId) => {
+    const updated = deleteConversation(convId);
+    setConversations(updated);
+    if (activeConversationId === convId) {
+      handleClearChat();
     }
   };
 
@@ -122,13 +162,15 @@ export default function App() {
             onSendMessage={handleSendMessage}
             onClearChat={handleClearChat}
             isStreaming={isStreaming}
-            onJumpToConversation={handleJumpToConversation}
+            onJumpToConversation={handleSelectConversation}
           />
         )}
 
         {activeTab === 'history' && (
           <HistoryView 
             conversations={conversations} 
+            onSelectConversation={handleSelectConversation}
+            onDeleteConversation={handleDeleteConversation}
           />
         )}
 
