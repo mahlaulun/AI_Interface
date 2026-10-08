@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Navbar from './components/Navbar.jsx';
 import ChatView from './components/ChatView.jsx';
 import HistoryView from './components/HistoryView.jsx';
@@ -7,6 +7,7 @@ import SettingsView from './components/SettingsView.jsx';
 import { streamChatResponse } from './services/llm.js';
 import { getStoredConversations, saveConversation, deleteConversation } from './services/storage.js';
 import { extractTopicsFromConversations } from './utils/wordcloud.js';
+import { MemoryIndexer } from './services/indexer.js';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('chat');
@@ -25,6 +26,8 @@ export default function App() {
     defaultProvider: 'openai'
   });
 
+  const indexerRef = useRef(new MemoryIndexer([]));
+
   // Load initial settings and conversations
   useEffect(() => {
     try {
@@ -39,11 +42,13 @@ export default function App() {
     const storedConvs = getStoredConversations();
     setConversations(storedConvs);
     setTopics(extractTopicsFromConversations(storedConvs));
+    indexerRef.current = new MemoryIndexer(storedConvs);
   }, []);
 
-  // Recalculate topics whenever conversations update
+  // Recalculate topics & index whenever conversations update
   useEffect(() => {
     setTopics(extractTopicsFromConversations(conversations));
+    indexerRef.current = new MemoryIndexer(conversations);
   }, [conversations]);
 
   const handleSaveSettings = (newSettings) => {
@@ -67,30 +72,44 @@ export default function App() {
     setActiveMessages(updatedMessages);
     setIsStreaming(true);
 
-    const assistantMsgId = `msg_${Date.now()}_assistant`;
-    const initialAssistantMsg = {
-      id: assistantMsgId,
-      role: 'assistant',
-      content: '',
-      timestamp: new Date().toISOString(),
-      recalledSnippets: []
-    };
-
-    const streamingMessagesList = [...updatedMessages, initialAssistantMsg];
-    setActiveMessages(streamingMessagesList);
-
     // Create or determine conversation ID
     const convId = activeConversationId || `conv_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
     if (!activeConversationId) {
       setActiveConversationId(convId);
     }
 
+    // 1. Search semantic memory for relevant past snippets
+    const recalledSnippets = indexerRef.current.search(text, activeConversationId, 3);
+    
+    // 2. Build system prompt context if snippets were recalled
+    let memorySystemPrompt = '';
+    if (recalledSnippets.length > 0) {
+      const contextBlocks = recalledSnippets.map((s, idx) => 
+        `[Memory Reference #${idx + 1} from chat "${s.conversationTitle}"]: "${s.text}"`
+      ).join('\n\n');
+
+      memorySystemPrompt = `You are MindSync, an intelligent second brain assistant. The user is asking you a question, and your indexing engine retrieved these relevant excerpts from their past conversations:\n\n${contextBlocks}\n\nUse this recalled context naturally and conversationally to answer the user's inquiry accurately and remind them of what was discussed.`;
+    }
+
+    const assistantMsgId = `msg_${Date.now()}_assistant`;
+    const initialAssistantMsg = {
+      id: assistantMsgId,
+      role: 'assistant',
+      content: '',
+      timestamp: new Date().toISOString(),
+      recalledSnippets: recalledSnippets
+    };
+
+    const streamingMessagesList = [...updatedMessages, initialAssistantMsg];
+    setActiveMessages(streamingMessagesList);
+
     try {
       let fullContent = '';
       const tokenStream = streamChatResponse({
         messages: updatedMessages,
         model: currentModel,
-        settings: settings
+        settings: settings,
+        systemPromptContext: memorySystemPrompt
       });
 
       for await (const token of tokenStream) {
@@ -114,7 +133,7 @@ export default function App() {
         title: conversationTitle,
         model: currentModel,
         messages: finalMessageHistory,
-        topics: ['general']
+        topics: text.toLowerCase().match(/\b[a-zA-Z]{4,15}\b/g)?.slice(0, 3) || ['general']
       };
 
       const updatedConvs = saveConversation(conversationDoc);

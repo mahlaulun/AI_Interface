@@ -50,7 +50,7 @@ Build mode: fast
   Learner check: Open the Topics tab, view the generated Word Cloud, click a word, and observe the filtered chat list and multi-chat synthesis.
   Commit: `Add dynamic SVG word cloud and multi-chat topic synthesis`
 
-- [ ] **5. Natural Conversational Memory Recall with Snippet Citations & Jump-to-Chat**
+- [x] **5. Natural Conversational Memory Recall with Snippet Citations & Jump-to-Chat**
   Becomes usable: Asking recall questions (*"What did we discuss earlier about X?"*) retrieves relevant past conversation snippets, attaches an expandable citation badge, and allows jumping directly to the source conversation.
   Why now: Completes the unique second brain kernel, tying together indexing, semantic recall, and chat continuity.
   PRD ref: `prd.md > Natural Conversational Memory Recall`
