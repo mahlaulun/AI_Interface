@@ -6,6 +6,7 @@ import TopicsView from './components/TopicsView.jsx';
 import SettingsView from './components/SettingsView.jsx';
 import { streamChatResponse } from './services/llm.js';
 import { getStoredConversations, saveConversation, deleteConversation } from './services/storage.js';
+import { extractTopicsFromConversations } from './utils/wordcloud.js';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('chat');
@@ -37,7 +38,13 @@ export default function App() {
 
     const storedConvs = getStoredConversations();
     setConversations(storedConvs);
+    setTopics(extractTopicsFromConversations(storedConvs));
   }, []);
+
+  // Recalculate topics whenever conversations update
+  useEffect(() => {
+    setTopics(extractTopicsFromConversations(conversations));
+  }, [conversations]);
 
   const handleSaveSettings = (newSettings) => {
     setSettings(newSettings);
@@ -177,6 +184,10 @@ export default function App() {
         {activeTab === 'topics' && (
           <TopicsView 
             topics={topics} 
+            conversations={conversations}
+            onSelectConversation={handleSelectConversation}
+            currentModel={currentModel}
+            settings={settings}
           />
         )}
 

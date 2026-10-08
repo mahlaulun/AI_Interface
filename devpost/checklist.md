@@ -40,7 +40,7 @@ Build mode: fast
   Learner check: Have two conversations, open the History tab, try sorting by date, and click a conversation to load its transcript.
   Commit: `Implement conversation storage engine and sortable history view`
 
-- [ ] **4. Dynamic Word Cloud & Multi-Chat Topic Synthesizer**
+- [x] **4. Dynamic Word Cloud & Multi-Chat Topic Synthesizer**
   Becomes usable: The Topics view visualizes an interactive SVG Word Cloud reflecting frequent discussion themes; clicking any topic aggregates matching chats and generates an AI summary.
   Why now: Delivers the core visual second-brain synthesis capability across stored conversations.
   PRD ref: `prd.md > Dynamic Word Cloud & Topic Synthesis`
