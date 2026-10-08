@@ -4,11 +4,15 @@ import ChatView from './components/ChatView.jsx';
 import HistoryView from './components/HistoryView.jsx';
 import TopicsView from './components/TopicsView.jsx';
 import SettingsView from './components/SettingsView.jsx';
+import { streamChatResponse } from './services/llm.js';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('chat');
   const [currentModel, setCurrentModel] = useState('gpt-4o');
   const [conversations, setConversations] = useState([]);
+  const [activeConversationId, setActiveConversationId] = useState(null);
+  const [activeMessages, setActiveMessages] = useState([]);
+  const [isStreaming, setIsStreaming] = useState(false);
   const [topics, setTopics] = useState([]);
   const [settings, setSettings] = useState({
     openaiKey: '',
@@ -19,7 +23,7 @@ export default function App() {
     defaultProvider: 'openai'
   });
 
-  // Load initial settings from localStorage
+  // Load initial settings
   useEffect(() => {
     try {
       const saved = localStorage.getItem('mindsync_settings');
@@ -27,7 +31,7 @@ export default function App() {
         setSettings(JSON.parse(saved));
       }
     } catch (e) {
-      console.warn('Failed to load settings from storage', e);
+      console.warn('Failed to load settings', e);
     }
   }, []);
 
@@ -37,6 +41,67 @@ export default function App() {
       localStorage.setItem('mindsync_settings', JSON.stringify(newSettings));
     } catch (e) {
       console.error('Failed to save settings', e);
+    }
+  };
+
+  const handleSendMessage = async (text) => {
+    const userMsg = {
+      id: `msg_${Date.now()}_user`,
+      role: 'user',
+      content: text,
+      timestamp: new Date().toISOString()
+    };
+
+    const updatedMessages = [...activeMessages, userMsg];
+    setActiveMessages(updatedMessages);
+    setIsStreaming(true);
+
+    const assistantMsgId = `msg_${Date.now()}_assistant`;
+    const initialAssistantMsg = {
+      id: assistantMsgId,
+      role: 'assistant',
+      content: '',
+      timestamp: new Date().toISOString(),
+      recalledSnippets: []
+    };
+
+    setActiveMessages([...updatedMessages, initialAssistantMsg]);
+
+    try {
+      let fullContent = '';
+      const tokenStream = streamChatResponse({
+        messages: updatedMessages,
+        model: currentModel,
+        settings: settings
+      });
+
+      for await (const token of tokenStream) {
+        fullContent += token;
+        setActiveMessages(prev => 
+          prev.map(m => m.id === assistantMsgId ? { ...m, content: fullContent } : m)
+        );
+      }
+    } catch (err) {
+      console.error('Streaming error:', err);
+      setActiveMessages(prev => 
+        prev.map(m => m.id === assistantMsgId ? { ...m, content: `Error generating response: ${err.message}` } : m)
+      );
+    } finally {
+      setIsStreaming(false);
+    }
+  };
+
+  const handleClearChat = () => {
+    setActiveMessages([]);
+    setActiveConversationId(null);
+  };
+
+  const handleJumpToConversation = (convId) => {
+    const conv = conversations.find(c => c.id === convId);
+    if (conv) {
+      setActiveConversationId(conv.id);
+      setActiveMessages(conv.messages || []);
+      setActiveTab('chat');
     }
   };
 
@@ -53,6 +118,11 @@ export default function App() {
           <ChatView 
             currentModel={currentModel} 
             onSelectModel={setCurrentModel} 
+            messages={activeMessages}
+            onSendMessage={handleSendMessage}
+            onClearChat={handleClearChat}
+            isStreaming={isStreaming}
+            onJumpToConversation={handleJumpToConversation}
           />
         )}
 

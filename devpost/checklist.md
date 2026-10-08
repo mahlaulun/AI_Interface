@@ -10,7 +10,7 @@ Build mode: fast
 
 ## Slices
 
-- [ ] **1. Scaffold & 4-Surface Navigation Shell**
+- [x] **1. Scaffold & 4-Surface Navigation Shell**
   Becomes usable: A running web application with the obsidian dark design system, top navigation switching between Chat, History, Topics, and Settings surfaces, and responsive layout.
   Why now: Establishes the visual shell and component routing so all feature slices have a clean place to integrate.
   PRD ref: `prd.md > Screens and Layout`, `prd.md > Look and Feel`
@@ -20,7 +20,7 @@ Build mode: fast
   Learner check: Open the app at `http://localhost:5173`, click through all 4 navigation tabs, and verify the clean obsidian dark UI layout.
   Commit: `Scaffold React app with 4-surface navigation and obsidian theme`
 
-- [ ] **2. Unified Multi-LLM Chatting & Model Switching**
+- [x] **2. Unified Multi-LLM Chatting & Model Switching**
   Becomes usable: Real-time chat workspace where you can switch between models (OpenAI, Gemini, Anthropic, Ollama), enter API keys in Settings, and stream responses.
   Why now: Chatting with your LLM of choice is the primary interaction loop.
   PRD ref: `prd.md > Multi-LLM Chatting & Switching`
